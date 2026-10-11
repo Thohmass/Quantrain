@@ -4,7 +4,7 @@
 crossovers and interlocks so that interference delivers every passenger with one press of **Run**. Every map
 is a real Qiskit circuit that you can read and run on a simulator or IonQ hardware.
 
-**▶ Play:** https://thohmass.github.io/Quantrain/prototype/ · **On Qollab:** {{QOLLAB_URL}} · **Video:** {{VIDEO_URL}}
+**▶ Play:** https://thohmass.github.io/Quantrain/prototype/ · **On Qollab:** https://qollab.xyz/u/Quantomas/quantrain · **Video:** {{VIDEO_URL}}
 
 ![Two entangled trains in level 14: ghosts on every track, a chain joining the branches that belong together](docs/img/entangled-couples.png)
 
