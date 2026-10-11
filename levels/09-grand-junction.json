@@ -1,0 +1,193 @@
+{
+  "format": "quantrain-level/1",
+  "id": "09-grand-junction",
+  "name": "Grand junction",
+  "blurb": "The train spreads over four tracks and reunites. Untouched, every ghost meets on D. One twist spreads the train everywhere: you need a pattern of rolls to send it all to A.",
+  "rails": [
+    "A",
+    "B",
+    "C",
+    "D"
+  ],
+  "columns": 8,
+  "dispatch": "sequential",
+  "trains": [
+    {
+      "id": "orange",
+      "colour": "#f2683a",
+      "depot": "A"
+    }
+  ],
+  "slots": [
+    {
+      "col": 4,
+      "rails": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ]
+    }
+  ],
+  "fixed": [
+    {
+      "type": "points",
+      "col": 1,
+      "rails": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "type": "cross",
+      "col": 2,
+      "rails": [
+        "B",
+        "C"
+      ]
+    },
+    {
+      "type": "points",
+      "col": 3,
+      "rails": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "type": "points",
+      "col": 3,
+      "rails": [
+        "C",
+        "D"
+      ]
+    },
+    {
+      "type": "points",
+      "col": 5,
+      "rails": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "type": "points",
+      "col": 5,
+      "rails": [
+        "C",
+        "D"
+      ]
+    },
+    {
+      "type": "cross",
+      "col": 6,
+      "rails": [
+        "B",
+        "C"
+      ]
+    },
+    {
+      "type": "points",
+      "col": 7,
+      "rails": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "type": "points",
+      "col": 7,
+      "rails": [
+        "C",
+        "D"
+      ]
+    }
+  ],
+  "stations": [
+    {
+      "id": "stop-a",
+      "name": "Stop A",
+      "rail": "A",
+      "col": 8,
+      "passengers": [
+        "bubble",
+        "cube",
+        "octahedron",
+        "bubble"
+      ]
+    },
+    {
+      "id": "stop-b",
+      "name": "Stop B",
+      "rail": "B",
+      "col": 8,
+      "passengers": []
+    },
+    {
+      "id": "stop-c",
+      "name": "Stop C",
+      "rail": "C",
+      "col": 8,
+      "passengers": []
+    },
+    {
+      "id": "stop-d",
+      "name": "Stop D",
+      "rail": "D",
+      "col": 8,
+      "passengers": []
+    }
+  ],
+  "supply": {
+    "twist": 2
+  },
+  "solutions": {
+    "untouched": [],
+    "one": [
+      {
+        "type": "twist",
+        "col": 4,
+        "rails": [
+          "B"
+        ],
+        "steps": 4
+      }
+    ],
+    "pattern": [
+      {
+        "type": "twist",
+        "col": 4,
+        "rails": [
+          "B"
+        ],
+        "steps": 4
+      },
+      {
+        "type": "twist",
+        "col": 4,
+        "rails": [
+          "C"
+        ],
+        "steps": 4
+      }
+    ],
+    "pattern-outer": [
+      {
+        "type": "twist",
+        "col": 4,
+        "rails": [
+          "A"
+        ],
+        "steps": 4
+      },
+      {
+        "type": "twist",
+        "col": 4,
+        "rails": [
+          "D"
+        ],
+        "steps": 4
+      }
+    ]
+  }
+}

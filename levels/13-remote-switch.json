@@ -1,0 +1,160 @@
+{
+  "format": "quantrain-level/1",
+  "id": "13-remote-switch",
+  "name": "Remote switch",
+  "blurb": "Same trick, but now split teal too. Wherever teal goes, orange follows its own way: the two trains end up entangled. Couples: A with C, B with D.",
+  "rails": [
+    "A",
+    "B",
+    "C",
+    "D"
+  ],
+  "columns": 4,
+  "cars": 4,
+  "dispatch": "together",
+  "trains": [
+    {
+      "id": "orange",
+      "colour": "#f2683a",
+      "depot": "A",
+      "rails": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "id": "teal",
+      "colour": "#12a39b",
+      "depot": "C",
+      "rails": [
+        "C",
+        "D"
+      ]
+    }
+  ],
+  "slots": [
+    {
+      "col": 1,
+      "rails": [
+        "C",
+        "D"
+      ]
+    },
+    {
+      "col": 2,
+      "rails": [
+        "B",
+        "C"
+      ]
+    }
+  ],
+  "fixed": [
+    {
+      "type": "points",
+      "col": 1,
+      "rails": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "type": "points",
+      "col": 3,
+      "rails": [
+        "A",
+        "B"
+      ]
+    }
+  ],
+  "stations": [
+    {
+      "id": "a",
+      "name": "Stop A",
+      "rail": "A",
+      "col": 4,
+      "passengers": [
+        "bubble",
+        "bubble"
+      ],
+      "partner": "c"
+    },
+    {
+      "id": "b",
+      "name": "Stop B",
+      "rail": "B",
+      "col": 4,
+      "passengers": [
+        "cube",
+        "cube"
+      ],
+      "partner": "d"
+    },
+    {
+      "id": "c",
+      "name": "Stop C",
+      "rail": "C",
+      "col": 4,
+      "passengers": [
+        "bubble",
+        "bubble"
+      ],
+      "partner": "a"
+    },
+    {
+      "id": "d",
+      "name": "Stop D",
+      "rail": "D",
+      "col": 4,
+      "passengers": [
+        "cube",
+        "cube"
+      ],
+      "partner": "b"
+    }
+  ],
+  "supply": {
+    "points": 1,
+    "interlock": 1
+  },
+  "solutions": {
+    "untouched": [],
+    "interlock-only": [
+      {
+        "type": "interlock",
+        "col": 2,
+        "rails": [
+          "B",
+          "C"
+        ]
+      }
+    ],
+    "split-only": [
+      {
+        "type": "points",
+        "col": 1,
+        "rails": [
+          "C",
+          "D"
+        ]
+      }
+    ],
+    "entangle": [
+      {
+        "type": "points",
+        "col": 1,
+        "rails": [
+          "C",
+          "D"
+        ]
+      },
+      {
+        "type": "interlock",
+        "col": 2,
+        "rails": [
+          "B",
+          "C"
+        ]
+      }
+    ]
+  }
+}

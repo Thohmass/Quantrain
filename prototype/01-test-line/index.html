@@ -1,0 +1,777 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quantrain Test Line</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@500;600;700&family=JetBrains+Mono:wght@600;700&display=swap">
+<style>
+  /* Layout: full-bleed tilted map (WebGL) · title, level picker and stats top-left · view controls top-right · Run button bottom-centre */
+  :root {
+    --ground: #f1f2ef;  --grid: #e2e4df;  --rail: #2c3452;  --rail-shadow: #dcdfd9;
+    --train: #f2683a;   --belly: #2a2f47; --window: #1b2036;
+    --tunnel: #3f57f0;
+    --platform: #c9cdd4; --building: #e3e7ee; --roof: #2c3452; --leaf: #5fae6e; --trunk: #8a6a4f;
+    --passenger: #2c3452; --station-fill: #ffffff;
+    --label-bg: #ffffff; --fg: #1b2036; --muted: #5f6578;
+    --btn: #1b2036; --btn-fg: #ffffff; --chip: #ffffff;
+    --font-ui: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-num: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #121629; --grid: #1b2140; --rail: #c6cef0; --rail-shadow: #1c2240;
+      --train: #ff7646; --belly: #262b45; --window: #141830;
+      --tunnel: #8b9cff;
+      --platform: #3a4166; --building: #4a527a; --roof: #c6cef0; --leaf: #4f9a63; --trunk: #7a5b43;
+      --passenger: #eef1ff; --station-fill: #121629;
+      --label-bg: #1f2545; --fg: #eef1ff; --muted: #9aa3c9;
+      --btn: #eef1ff; --btn-fg: #121629; --chip: #1f2545; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #121629; --grid: #1b2140; --rail: #c6cef0; --rail-shadow: #1c2240;
+    --train: #ff7646; --belly: #262b45; --window: #141830;
+    --tunnel: #8b9cff;
+    --platform: #3a4166; --building: #4a527a; --roof: #c6cef0; --leaf: #4f9a63; --trunk: #7a5b43;
+    --passenger: #eef1ff; --station-fill: #121629;
+    --label-bg: #1f2545; --fg: #eef1ff; --muted: #9aa3c9;
+    --btn: #eef1ff; --btn-fg: #121629; --chip: #1f2545; color-scheme: dark;
+  }
+
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--ground); color: var(--fg); font-family: var(--font-ui); overflow: hidden; }
+  #stage { position: fixed; inset: 0; }
+  #stage canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+
+  header { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 14px); left: 16px; right: 112px; pointer-events: none; }
+  h1 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: 0.01em; }
+  header p { margin: 4px 0 0; font-size: 13px; color: var(--muted); max-width: 44ch; line-height: 1.4; }
+  .levels { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; pointer-events: auto; }
+  .levels button {
+    font: 600 12px var(--font-ui); padding: 6px 11px; border-radius: 999px; cursor: pointer;
+    border: 1.5px solid var(--muted); background: var(--chip); color: var(--fg);
+  }
+  .levels button[aria-pressed="true"] { background: var(--btn); color: var(--btn-fg); border-color: var(--btn); }
+  .stats { margin-top: 6px; font: 600 12px var(--font-num); color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  .tools { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 12px); right: 16px; display: flex; gap: 8px; }
+  .tools button {
+    width: 40px; height: 40px; border-radius: 999px; border: 1.5px solid var(--muted);
+    background: var(--chip); color: var(--fg); font: 600 13px var(--font-ui); cursor: pointer;
+    display: grid; place-items: center; padding: 0;
+  }
+  .tools button:focus-visible, #run:focus-visible, .levels button:focus-visible { outline: 3px solid var(--tunnel); outline-offset: 3px; }
+
+  #labels { position: fixed; inset: 0; pointer-events: none; }
+  .lbl { position: absolute; left: 0; top: 0; white-space: nowrap; will-change: transform; }
+  .phase {
+    font-family: var(--font-num); font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums;
+    background: var(--label-bg); color: var(--fg);
+    padding: 4px 10px; border-radius: 999px; box-shadow: 0 0 0 2px var(--train);
+  }
+  .phase small { font-size: 12px; color: var(--muted); font-weight: 600; }
+  .tag { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); text-align: center; }
+  .tag b { display: block; font-family: var(--font-num); font-size: 13px; letter-spacing: 0; text-transform: none; color: var(--tunnel); }
+  .tag.stop b { color: var(--fg); }
+
+  #run {
+    position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); transform: translateX(-50%);
+    font: 700 17px var(--font-ui); min-width: 168px; padding: 14px 34px;
+    border: 0; border-radius: 999px; background: var(--btn); color: var(--btn-fg); cursor: pointer;
+  }
+  #run:disabled { opacity: 0.55; cursor: default; }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div id="labels"></div>
+<header>
+  <h1 id="title">Quantrain</h1>
+  <p id="blurb"></p>
+  <nav class="levels" id="levels" aria-label="Levels"></nav>
+  <div class="stats" id="stats"></div>
+</header>
+<div class="tools">
+  <button id="fit" type="button" aria-label="Fit the whole line on screen" title="Fit view">Fit</button>
+  <button id="theme" type="button" aria-label="Switch between light and dark mode" title="Light / dark">
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>
+  </button>
+</div>
+<button id="run" type="button">Run</button>
+
+<script type="importmap">
+{ "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const PI = Math.PI;
+
+// ───────────────────────── levels (edit freely) ─────────────────────────
+// Rails run along x; x is also time. Stations all sit at one column (stationX) and measure which rail the train is on.
+const LEVELS = [
+  {
+    name: 'Twist line',
+    blurb: 'The roll of the train is its phase φ. Each twist dial rolls it by its coloured arc.',
+    rails: [{ id: 'A', z: 0, from: -9, to: 9 }],
+    depot: { rail: 'A', x: -7.6 }, exit: 7.6,
+    twists: [
+      { rail: 'A', x: -5.0, dphi: PI / 2 },
+      { rail: 'A', x: -2.0, dphi: PI / 4 },
+      { rail: 'A', x:  4.7, dphi: PI },
+    ],
+    splitters: [],
+    stationX: 1.4,
+    stations: [
+      { rail: 'A', name: 'stop', platforms: ['front', 'back'], waitOn: 'front', decor: true, passengers: ['bubble', 'cube', 'octahedron'] },
+    ],
+  },
+  {
+    name: 'Quantum points',
+    blurb: 'Quantum points split the train into two ghosts, 50 % on each line. The stations measure it: it shows up on one line only.',
+    rails: [{ id: 'A', z: -1.35, from: -9, to: 9 }, { id: 'B', z: 1.35, from: -9, to: 9 }],
+    depot: { rail: 'A', x: -7.6 }, exit: 7.6,
+    twists: [],
+    splitters: [{ rails: ['A', 'B'], x: -3.4, len: 3.0, theta: PI / 2 }],   // theta = π/2 → 50:50
+    stationX: 3.2,
+    stations: [
+      { rail: 'A', name: 'stop A', platforms: ['back'],  waitOn: 'back',  decor: true, passengers: ['bubble', 'cube'] },
+      { rail: 'B', name: 'stop B', platforms: ['front'], waitOn: 'front', passengers: ['octahedron', 'bubble'] },
+    ],
+  },
+];
+
+const H           = 1.6;    // rail height (the train rolls around and under it)
+const TWIST_LEN   = 1.6;    // distance over which a dial rolls the train
+const DIAL_R      = 1.1;    // dial radius (must clear the rolling train)
+const SPEED       = 2.4;    // average speed, units per second
+const DWELL       = 1.4;    // seconds at the stations
+const TRAIN_SCALE = 1.45;
+const PLATFORM    = { len: 3.0, width: 0.8, height: 0.5, offset: 1.6 };   // platform centre at rail.z ± offset
+const CAMERA      = { elevationDeg: 34, azimuthDeg: 24, portraitAzimuthDeg: 64, maxZoom: 5 };
+
+// ───────────────────────── helpers ─────────────────────────
+const FRACS = ['0', 'π/4', 'π/2', '3π/4', 'π', '5π/4', '3π/2', '7π/4'];
+function fmtPhase(phi) {                       // label format in units of π
+  const t = ((phi / PI) % 2 + 2) % 2;          // [0, 2)
+  const q = t * 4, k = Math.round(q);
+  return Math.abs(q - k) < 0.03 ? FRACS[k % 8] : t.toFixed(2) + 'π';
+}
+const fmtDelta = d => (d < 0 ? '−' : '+') + fmtPhase(Math.abs(d));
+const clamp01 = v => Math.min(1, Math.max(0, v));
+const smooth = v => v * v * (3 - 2 * v);
+const easeInOut = v => 0.5 - 0.5 * Math.cos(PI * v);
+const lerp = (a, b, u) => a + (b - a) * u;
+const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const abs2 = c => c[0] * c[0] + c[1] * c[1];
+
+// ───────────────────────── physics: one train, one complex amplitude per rail ─────────────────────────
+// Elements act gradually over their length so the animation is continuous. Twist = phase e^{iΔφ} on one rail.
+// Points (beam splitter) = real rotation RY(θ) on two rails: P(stay) = cos²(θ/2), P(switch) = sin²(θ/2).
+const opProgress = (op, x) => x === -Infinity ? 0 : smooth(clamp01((x - op.start) / op.len));
+function evolve(L, vec, x0, x1) {
+  const a = vec.map(c => [c[0], c[1]]);
+  for (const op of L.ops) {
+    const dp = opProgress(op, x1) - opProgress(op, x0);
+    if (Math.abs(dp) < 1e-9) continue;
+    if (op.kind === 'twist') {
+      const ang = op.dphi * dp, c = Math.cos(ang), s = Math.sin(ang), [re, im] = a[op.r];
+      a[op.r] = [re * c - im * s, re * s + im * c];
+    } else {
+      const half = op.theta * dp / 2, c = Math.cos(half), s = Math.sin(half), u = a[op.r1], w = a[op.r2];
+      a[op.r1] = [c * u[0] - s * w[0], c * u[1] - s * w[1]];
+      a[op.r2] = [s * u[0] + c * w[0], s * u[1] + c * w[1]];
+    }
+  }
+  return a;
+}
+
+// ───────────────────────── renderer, scene, materials ─────────────────────────
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+stage.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 200);
+
+const themed = [];                             // [{ mat, token }] recoloured on theme change
+function tmat(token, opts = {}) {
+  const m = opts.line ? new THREE.LineBasicMaterial(opts.params) : new THREE.MeshBasicMaterial(opts.params);
+  themed.push({ mat: m, token });
+  return m;
+}
+const glass = (opacity) => ({ params: { transparent: true, opacity, depthWrite: false, side: THREE.DoubleSide } });
+const mat = {
+  ground: tmat('--ground'), rail: tmat('--rail'), shadow: tmat('--rail-shadow'),
+  tunnel: tmat('--tunnel'), stationFill: tmat('--station-fill'), window: tmat('--window'),
+  dialFill: tmat('--tunnel', glass(0.06)), dialSector: tmat('--tunnel', glass(0.22)), dialRing: tmat('--tunnel', glass(0.45)),
+  splitGlass: tmat('--tunnel', glass(0.14)), splitPlate: tmat('--tunnel', glass(0.35)), splitEdge: tmat('--tunnel', { line: true }),
+};
+const matPainted = new THREE.MeshBasicMaterial({ vertexColors: true });
+
+// Flat "baked light" shading: each face takes the token colour, lighter on top, darker underneath.
+const painted = [];                            // [{ geo, token, rule, level }]
+const shade = { top: 0.32 };
+const WHITE = new THREE.Color('#ffffff'), BLACK = new THREE.Color('#000000');
+function paintable(geometry, token, rule = null, level = true) {
+  const geo = geometry.index ? geometry.toNonIndexed() : geometry;
+  geo.computeVertexNormals();
+  geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(geo.attributes.position.count * 3), 3));
+  const entry = { geo, token, rule, level };
+  painted.push(entry);
+  repaint(entry);
+  return geo;
+}
+const shaded = (geometry, token, rule, level) => new THREE.Mesh(paintable(geometry, token, rule, level), matPainted);
+function repaint({ geo, token, rule }) {
+  const base = new THREE.Color(css(token));
+  const n = geo.attributes.normal, p = geo.attributes.position, c = geo.attributes.color, col = new THREE.Color();
+  for (let i = 0; i < n.count; i += 3) {
+    const nx = (n.getX(i) + n.getX(i + 1) + n.getX(i + 2)) / 3;
+    const ny = (n.getY(i) + n.getY(i + 1) + n.getY(i + 2)) / 3;
+    const cy = (p.getY(i) + p.getY(i + 1) + p.getY(i + 2)) / 3;
+    const custom = rule && rule(nx, ny, cy);
+    if (custom) col.copy(custom);
+    else {
+      col.copy(base);
+      if (ny > 0) col.lerp(WHITE, shade.top * ny); else col.lerp(BLACK, 0.28 * -ny);
+      col.lerp(BLACK, 0.06 * Math.abs(nx));
+    }
+    for (let k = 0; k < 3; k++) c.setXYZ(i + k, col.r, col.g, col.b);
+  }
+  c.needsUpdate = true;
+}
+
+// ground + faint grid (shared by all levels)
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(120, 60), mat.ground);
+ground.rotation.x = -PI / 2;
+scene.add(ground);
+const grid = new THREE.GridHelper(120, 120);
+grid.position.y = 0.001;
+scene.add(grid);
+
+// ───────────────────────── the quantrain (shared geometry, one ghost per rail) ─────────────────────────
+// Local frame: +x = forward along the rail, +y = "up" away from the rail (rolls with phase), z = sideways.
+const trainColors = {};
+function trainColorsFromTheme() {
+  const base = new THREE.Color(css('--train'));
+  trainColors.side = base;
+  trainColors.roof = base.clone().lerp(WHITE, 0.62);
+  trainColors.nose = base.clone().lerp(WHITE, 0.2);
+  trainColors.back = base.clone().lerp(BLACK, 0.18);
+  trainColors.belly = new THREE.Color(css('--belly'));
+  trainColors.window = new THREE.Color(css('--window'));
+}
+trainColorsFromTheme();
+const bodyShape = new THREE.Shape();          // side profile: rounded tail, curved nose
+bodyShape.moveTo(-0.9, 0);
+bodyShape.lineTo(0.72, 0);
+bodyShape.quadraticCurveTo(1.12, 0.0, 1.12, 0.14);
+bodyShape.quadraticCurveTo(1.0, 0.38, 0.55, 0.44);
+bodyShape.lineTo(-0.9, 0.44);
+bodyShape.quadraticCurveTo(-1.0, 0.44, -1.0, 0.34);
+bodyShape.lineTo(-1.0, 0.1);
+bodyShape.quadraticCurveTo(-1.0, 0, -0.9, 0);
+const bodyExtrude = new THREE.ExtrudeGeometry(bodyShape, {
+  depth: 0.38, curveSegments: 6, bevelEnabled: true, bevelThickness: 0.06, bevelSize: 0.06, bevelSegments: 3,
+});
+bodyExtrude.translate(0, 0, -0.19);
+const bodyGeo = paintable(bodyExtrude, '--train', (nx, ny, cy) => {
+  if (nx > 0.2 && cy > 0.24 && ny > -0.2) return trainColors.window;   // curved windscreen
+  if (ny > 0.55) return trainColors.roof;
+  if (ny < -0.55) return trainColors.belly;
+  if (nx > 0.3) return trainColors.nose;
+  if (nx < -0.55) return trainColors.back;
+  return trainColors.side;
+}, false);
+const bandGeo = new THREE.BoxGeometry(1.35, 0.11, 0.505);
+const hangerGeo = new THREE.BoxGeometry(0.3, 0.14, 0.18);
+
+function makeGhost() {
+  const mats = {
+    body: new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true }),
+    window: tmat('--window', { params: { transparent: true } }),
+    belly: tmat('--belly', { params: { transparent: true } }),
+  };
+  const root = new THREE.Group(), yaw = new THREE.Group(), roll = new THREE.Group();
+  root.add(yaw); yaw.add(roll);
+  roll.scale.setScalar(TRAIN_SCALE);
+  const body = new THREE.Mesh(bodyGeo, mats.body);
+  body.position.y = 0.16;
+  const band = new THREE.Mesh(bandGeo, mats.window);
+  band.position.set(-0.2, 0.16 + 0.27, 0);
+  roll.add(body, band);
+  for (const x of [-0.55, 0.45]) {             // two hangers that clamp the train to the rail
+    const hanger = new THREE.Mesh(hangerGeo, mats.belly);
+    hanger.position.set(x, 0.08, 0);
+    roll.add(hanger);
+  }
+  scene.add(root);
+  const label = { el: document.createElement('div'), world: new THREE.Vector3(), anchorY: -1 };
+  label.el.className = 'lbl phase';
+  document.getElementById('labels').appendChild(label.el);
+  const g = { root, yaw, roll, mats, label };
+  g.setOpacity = o => { for (const m of Object.values(mats)) m.opacity = o; };
+  return g;
+}
+const ghosts = [makeGhost(), makeGhost(), makeGhost(), makeGhost()];
+
+// ───────────────────────── level building ─────────────────────────
+const SHAPES = {
+  bubble:     () => new THREE.IcosahedronGeometry(0.19, 2),
+  cube:       () => new THREE.BoxGeometry(0.3, 0.3, 0.3),
+  octahedron: () => new THREE.OctahedronGeometry(0.24, 0),
+};
+// Dial frame: local x = world up, local y = world front (+z), local z = along the rail,
+// so +angle about local z has the same sense as the train's roll (positive = leaning right).
+const dialBasis = new THREE.Matrix4().makeBasis(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 1), new THREE.Vector3(1, 0, 0));
+
+let L = null, levelGroup = null, levelLabels = [];
+function addLabel(className, html, world, anchorY = -0.5) {
+  const el = document.createElement('div');
+  el.className = 'lbl ' + className;
+  el.innerHTML = html;
+  document.getElementById('labels').appendChild(el);
+  const l = { el, world, anchorY };
+  levelLabels.push(l);
+  return l;
+}
+
+function buildLevel(index) {
+  if (levelGroup) {
+    scene.remove(levelGroup);
+    levelGroup.traverse(o => o.geometry && o.geometry.dispose());
+  }
+  for (const l of levelLabels) l.el.remove();
+  levelLabels = [];
+  for (let i = painted.length - 1; i >= 0; i--) if (painted[i].level) painted.splice(i, 1);
+
+  L = structuredClone(LEVELS[index]);
+  L.index = index;
+  const G = levelGroup = new THREE.Group();
+  scene.add(G);
+  const railIndex = id => L.rails.findIndex(r => r.id === id);
+  const zOf = id => L.rails[railIndex(id)].z;
+
+  // rails, ground shadows, terminus bars
+  for (const r of L.rails) {
+    const len = r.to - r.from, mid = (r.to + r.from) / 2;
+    const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, len, 16), mat.rail);
+    rail.rotation.z = PI / 2;
+    rail.position.set(mid, H, r.z);
+    const sh = new THREE.Mesh(new THREE.PlaneGeometry(len, 0.16), mat.shadow);
+    sh.rotation.x = -PI / 2;
+    sh.position.set(mid, 0.003, r.z);
+    G.add(rail, sh);
+    for (const x of [r.from, r.to]) {
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.14, 0.9), mat.rail);
+      bar.position.set(x, H, r.z);
+      G.add(bar);
+    }
+  }
+
+  // depot (Mini-Metro square)
+  const dz = zOf(L.depot.rail);
+  for (const [size, m, y] of [[1.2, mat.rail, 0.006], [0.86, mat.stationFill, 0.008]]) {
+    const sq = new THREE.Mesh(new THREE.PlaneGeometry(size, size), m);
+    sq.rotation.x = -PI / 2;
+    sq.position.set(L.depot.x, y, dz);
+    G.add(sq);
+  }
+  const zMax = Math.max(...L.rails.map(r => r.z));
+  addLabel('tag', 'depot', new THREE.Vector3(L.depot.x, 0, dz + 1.3));
+  addLabel('tag', 'exit', new THREE.Vector3(L.exit + 0.4, 0, zMax + 1.3));
+
+  // operations in time order
+  L.ops = [];
+  for (const t of L.twists) {
+    const op = { kind: 'twist', r: railIndex(t.rail), start: t.x - TWIST_LEN / 2, len: TWIST_LEN, dphi: t.dphi, x: t.x };
+    L.ops.push(op);
+    buildDial(G, op, zOf(t.rail));
+    addLabel('tag', `twist<b>${fmtDelta(t.dphi)}</b>`, new THREE.Vector3(t.x, 0, zOf(t.rail) + DIAL_R + 0.8));
+  }
+  for (const s of L.splitters) {
+    const op = { kind: 'split', r1: railIndex(s.rails[0]), r2: railIndex(s.rails[1]), start: s.x - s.len / 2, len: s.len, theta: s.theta, x: s.x };
+    L.ops.push(op);
+    buildPoints(G, op, zOf(s.rails[0]), zOf(s.rails[1]));
+    const pStay = Math.round(100 * Math.cos(s.theta / 2) ** 2);
+    addLabel('tag', `quantum points<b>${pStay} : ${100 - pStay}</b>`, new THREE.Vector3(s.x, 0, zMax + 1.6));
+  }
+  L.ops.sort((a, b) => a.start - b.start);
+  L.init = L.rails.map((_, i) => (i === railIndex(L.depot.rail) ? [1, 0] : [0, 0]));
+  for (const op of L.ops) op.pre = evolve(L, L.init, -Infinity, op.start);   // state entering each element
+
+  // stations
+  L.stationObjs = L.stations.map(st => buildStation(G, st, railIndex(st.rail), zOf(st.rail)));
+
+  // header, ghosts, stats
+  document.getElementById('title').textContent = `Quantrain · ${index + 1}. ${L.name}`;
+  document.getElementById('blurb').textContent = L.blurb;
+  for (const b of document.querySelectorAll('.levels button')) b.setAttribute('aria-pressed', String(+b.dataset.level === index));
+  for (const g of ghosts) { g.root.visible = false; g.label.el.hidden = true; }
+  resetRun();
+  applyTheme();
+  fit();
+}
+
+function buildDial(G, op, z) {
+  const dial = new THREE.Group();
+  dial.position.set(op.x, H, z);
+  dial.quaternion.setFromRotationMatrix(dialBasis);
+  dial.add(new THREE.Mesh(new THREE.CircleGeometry(DIAL_R, 64), mat.dialFill));          // faint disc
+  dial.add(new THREE.Mesh(new THREE.TorusGeometry(DIAL_R, 0.018, 6, 96), mat.dialRing));  // thin outline
+  const end = new THREE.Mesh(new THREE.SphereGeometry(0.055, 12, 8), mat.tunnel);         // round cap where the twist ends
+  end.position.set(Math.cos(op.dphi) * DIAL_R, Math.sin(op.dphi) * DIAL_R, 0);
+  dial.add(end);
+  const sector = new THREE.Mesh(new THREE.BufferGeometry(), mat.dialSector);              // stronger fill, still to come
+  const arc = new THREE.Mesh(new THREE.BufferGeometry(), mat.tunnel);                     // thick arc, still to come
+  const needle = new THREE.Group();            // diameter: thick pointer half + thin tail, so π ≠ 0 at a glance
+  const pointer = new THREE.Mesh(new THREE.BoxGeometry(DIAL_R, 0.065, 0.065), mat.rail);
+  pointer.position.x = DIAL_R / 2;
+  const tail = new THREE.Mesh(new THREE.BoxGeometry(DIAL_R, 0.024, 0.024), mat.rail);
+  tail.position.x = -DIAL_R / 2;
+  needle.add(pointer, tail);
+  dial.add(sector, arc, needle);
+  G.add(dial);
+  Object.assign(op, { sector, arc, needle, shown: null });
+  setDial(op, 0);
+}
+function setDial(op, cur) {
+  if (op.shown !== null && Math.abs(op.shown - cur) < 1e-4) return;
+  op.shown = cur;
+  op.needle.rotation.z = cur;
+  const len = Math.abs(op.dphi - cur), start = Math.min(cur, op.dphi);
+  op.arc.geometry.dispose();
+  op.sector.geometry.dispose();
+  if (len < 1e-3) {
+    op.arc.geometry = new THREE.BufferGeometry();
+    op.sector.geometry = new THREE.BufferGeometry();
+    return;
+  }
+  const segs = Math.max(3, Math.ceil(64 * len / PI));
+  op.arc.geometry = new THREE.TorusGeometry(DIAL_R, 0.055, 6, segs, len);
+  op.arc.rotation.z = start;
+  op.sector.geometry = new THREE.CircleGeometry(DIAL_R, segs, start, len);
+}
+
+// Quantum points: a scissors crossover between two rails with a glass splitter cube at the crossing.
+const crossZ = (zFrom, zTo, u) => zFrom + (zTo - zFrom) * smooth(clamp01(u));
+function buildPoints(G, op, z1, z2) {
+  for (const [a, b] of [[z1, z2], [z2, z1]]) {
+    const pts = Array.from({ length: 33 }, (_, i) => new THREE.Vector3(op.start + op.len * i / 32, H, crossZ(a, b, i / 32)));
+    G.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 64, 0.07, 10), mat.rail));
+  }
+  const cube = new THREE.Group();
+  cube.position.set(op.x, H, (z1 + z2) / 2);
+  const box = new THREE.BoxGeometry(0.95, 0.95, 0.95);
+  cube.add(new THREE.Mesh(box, mat.splitGlass));
+  cube.add(new THREE.LineSegments(new THREE.EdgesGeometry(box), mat.splitEdge));
+  const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.95 * Math.SQRT2, 0.95), mat.splitPlate);   // the half-mirror
+  plate.rotation.y = PI / 4;
+  cube.add(plate);
+  G.add(cube);
+}
+
+function buildStation(G, st, r, railZ) {
+  const sx = L.stationX;
+  const sideSign = s => (s === 'front' ? 1 : -1);
+  for (const side of st.platforms) {
+    const p = shaded(new THREE.BoxGeometry(PLATFORM.len, PLATFORM.height, PLATFORM.width), '--platform');
+    p.position.set(sx, PLATFORM.height / 2, railZ + sideSign(side) * PLATFORM.offset);
+    G.add(p);
+  }
+  if (st.decor) {                               // a little house and a tree behind the back platform
+    const backZ = railZ - PLATFORM.offset;
+    const house = new THREE.Group();
+    const walls = shaded(new THREE.BoxGeometry(1.3, 0.8, 0.8), '--building');
+    walls.position.y = 0.4;
+    const roof = shaded(new THREE.CylinderGeometry(0.56, 0.56, 1.42, 3, 1), '--roof');   // triangular prism
+    roof.rotation.set(-PI / 2, 0, PI / 2);
+    roof.position.y = 0.8 + 0.27;
+    roof.scale.set(1, 1, 0.82);
+    const door = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 0.42), mat.window);
+    door.position.set(0.25, 0.21, 0.401);
+    house.add(walls, roof, door);
+    house.position.set(sx + 0.7, 0, backZ - 1.3);
+    const tree = new THREE.Group();
+    const trunk = shaded(new THREE.BoxGeometry(0.12, 0.45, 0.12), '--trunk');
+    trunk.position.y = 0.22;
+    const crownA = shaded(new THREE.IcosahedronGeometry(0.42, 0), '--leaf');
+    crownA.position.y = 0.72;
+    const crownB = shaded(new THREE.IcosahedronGeometry(0.3, 0), '--leaf');
+    crownB.position.set(0.12, 1.05, 0.05);
+    tree.add(trunk, crownA, crownB);
+    tree.position.set(sx - 1.0, 0, backZ - 1.2);
+    G.add(house, tree);
+  }
+  const waitZ = railZ + sideSign(st.waitOn) * PLATFORM.offset;
+  const passengers = st.passengers.map((kind, i, all) => {
+    const mesh = shaded(SHAPES[kind](), '--passenger');
+    const home = new THREE.Vector3(sx + (i - (all.length - 1) / 2) * 0.75, PLATFORM.height + 0.26, waitZ);
+    mesh.position.copy(home);
+    G.add(mesh);
+    return { mesh, home, state: 'waiting', t0: 0 };
+  });
+  const labelAt = st.waitOn === 'front'          // front: in front of the platform; back: off its left end
+    ? new THREE.Vector3(sx, 0, waitZ + 0.95)
+    : new THREE.Vector3(sx - PLATFORM.len / 2 - 0.6, 0, waitZ - 1.0);
+  const label = addLabel('tag stop', '', labelAt);
+  return { st, r, passengers, label };
+}
+
+// ───────────────────────── labels ─────────────────────────
+const v = new THREE.Vector3();
+function placeLabel(l, w, h) {
+  v.copy(l.world).project(camera);
+  const x = (v.x + 1) / 2 * w, y = (1 - v.y) / 2 * h;
+  l.el.style.transform = `translate(${x}px, ${y}px) translate(-50%, ${l.anchorY * 100}%)`;
+}
+function placeLabels() {
+  const w = renderer.domElement.clientWidth, h = renderer.domElement.clientHeight;
+  for (const l of levelLabels) placeLabel(l, w, h);
+  for (const g of ghosts) if (!g.label.el.hidden) placeLabel(g.label, w, h);
+}
+
+// ───────────────────────── camera fit + zoom / pan ─────────────────────────
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableRotate = false;
+controls.zoomToCursor = true;
+controls.screenSpacePanning = true;
+controls.minZoom = 1;
+controls.maxZoom = CAMERA.maxZoom;
+controls.mouseButtons = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
+controls.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_PAN };
+
+const viewDir = new THREE.Vector3();
+function fit() {
+  if (!levelGroup) return;
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h);
+  levelGroup.updateMatrixWorld(true);           // fresh objects have no world matrices until the first render
+  const box = new THREE.Box3().setFromObject(levelGroup);
+  const home = box.getCenter(new THREE.Vector3());
+  const el = THREE.MathUtils.degToRad(CAMERA.elevationDeg);
+  const az = THREE.MathUtils.degToRad(h > w * 1.1 ? CAMERA.portraitAzimuthDeg : CAMERA.azimuthDeg);
+  viewDir.set(-Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el));
+  controls.target.copy(home);
+  camera.position.copy(home).addScaledVector(viewDir, 60);
+  camera.zoom = 1;
+  camera.lookAt(home);
+  camera.updateMatrixWorld();
+  // Fit to the real objects and labels (not the empty corners of one big box).
+  const pts = [], b = new THREE.Box3();
+  levelGroup.traverse(o => {
+    if (!(o.isMesh || o.isLine) || !o.geometry.attributes.position) return;
+    b.setFromObject(o);
+    if (b.isEmpty()) return;
+    for (let i = 0; i < 8; i++) pts.push(new THREE.Vector3(i & 1 ? b.max.x : b.min.x, i & 2 ? b.max.y : b.min.y, i & 4 ? b.max.z : b.min.z));
+  });
+  for (const l of levelLabels) pts.push(l.world.clone());
+  for (const r of L.rails) pts.push(new THREE.Vector3(r.from, H + 1.7, r.z), new THREE.Vector3(r.to, H + 1.7, r.z));   // ghost labels
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const pt of pts) {
+    pt.applyMatrix4(camera.matrixWorldInverse);
+    minX = Math.min(minX, pt.x); maxX = Math.max(maxX, pt.x); minY = Math.min(minY, pt.y); maxY = Math.max(maxY, pt.y);
+  }
+  minY -= 0.35; maxX += 0.6; minX -= 0.6;      // label text extends below / beside its anchor
+  const topPx = document.querySelector('header').getBoundingClientRect().bottom + 12;
+  const bottomPx = 96;
+  const availW = w - 32, availH = Math.max(80, h - topPx - bottomPx);
+  const s = Math.max((maxX - minX) / availW, (maxY - minY) / availH);   // world units per pixel
+  const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+  const top = cy + (topPx + availH / 2) * s;
+  camera.left = cx - (w / 2) * s; camera.right = cx + (w / 2) * s;
+  camera.top = top; camera.bottom = top - h * s;
+  camera.updateProjectionMatrix();
+  controls.update();
+}
+document.getElementById('fit').addEventListener('click', fit);
+
+// ───────────────────────── theme ─────────────────────────
+function applyTheme() {
+  scene.background = new THREE.Color(css('--ground'));
+  for (const { mat: m, token } of themed) m.color.set(css(token));
+  grid.material.color = new THREE.Color(css('--grid'));
+  grid.material.vertexColors = false;
+  grid.material.needsUpdate = true;
+  const g = new THREE.Color(css('--ground'));
+  shade.top = (g.r + g.g + g.b) / 3 < 0.2 ? 0.12 : 0.32;   // gentler highlights on dark ground
+  trainColorsFromTheme();
+  painted.forEach(repaint);
+}
+const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+darkQuery.addEventListener('change', applyTheme);
+new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+document.getElementById('theme').addEventListener('click', () => {
+  const root = document.documentElement;
+  const dark = root.dataset.theme ? root.dataset.theme === 'dark' : darkQuery.matches;
+  root.dataset.theme = dark ? 'light' : 'dark';
+});
+
+// ───────────────────────── drawing the train state ─────────────────────────
+// Each rail with amplitude shows a ghost: opacity ~ probability, roll = phase. A ghost that is just being
+// created by quantum points slides along the crossover from the rail its amplitude came from.
+function ghostPose(r, x) {
+  let z = L.rails[r].z, yaw = 0;
+  for (const op of L.ops) {
+    if (op.kind !== 'split' || (op.r1 !== r && op.r2 !== r)) continue;
+    const other = op.r1 === r ? op.r2 : op.r1;
+    if (abs2(op.pre[r]) < 1e-6 && abs2(op.pre[other]) > 1e-6 && x > op.start && x < op.start + op.len) {
+      const u = (x - op.start) / op.len, zFrom = L.rails[other].z, zTo = L.rails[r].z;
+      z = crossZ(zFrom, zTo, u);
+      yaw = -Math.atan((zTo - zFrom) * 6 * u * (1 - u) / op.len);
+    }
+  }
+  return { z, yaw };
+}
+let collapse = null;                             // { rail, t0, before: [p], vec: amplitudes after measurement }
+function drawTrain(x, now) {
+  const pre = evolve(L, L.init, -Infinity, collapse ? L.stationX : x);
+  const post = collapse ? evolve(L, collapse.vec, L.stationX, x) : null;
+  const u = collapse ? clamp01((now - collapse.t0) / 380) : 0;
+  L.rails.forEach((rail, r) => {
+    const g = ghosts[r];
+    let p, amp;
+    if (!collapse) { amp = pre[r]; p = abs2(amp); }
+    else if (r === collapse.rail) { amp = post[r]; p = lerp(collapse.before[r], 1, u); }
+    else { amp = pre[r]; p = lerp(collapse.before[r], 0, u); }
+    const visible = p > 0.002;
+    g.root.visible = visible;
+    g.label.el.hidden = !visible;
+    if (!visible) return;
+    const { z, yaw } = ghostPose(r, x);
+    g.root.position.set(x, H, z);
+    g.yaw.rotation.y = yaw;
+    const phi = Math.atan2(amp[1], amp[0]);
+    g.roll.rotation.x = phi;
+    g.root.scale.setScalar(collapse && r !== collapse.rail ? 1 + 0.35 * u : 1);
+    g.setOpacity(0.15 + 0.85 * p);
+    g.label.world.set(x + 0.1, H + (L.twists.length ? DIAL_R + 0.35 : 1.2), z);
+    const pct = Math.round(p * 100);
+    g.label.el.innerHTML = `φ = ${fmtPhase(phi)}` + (pct < 100 ? ` <small>· ${pct}%</small>` : '');
+  });
+  for (const op of L.ops) if (op.kind === 'twist') setDial(op, op.dphi * opProgress(op, x));
+}
+
+// ───────────────────────── run logic ─────────────────────────
+const runBtn = document.getElementById('run');
+const statsEl = document.getElementById('stats');
+const stats = { runs: 0 };
+let state = 'idle', legs = [], t0 = 0, outcome = 0;
+const allPassengers = () => L.stationObjs.flatMap(s => s.passengers);
+const waitingCount = () => allPassengers().filter(p => p.state === 'waiting').length;
+
+function updateHud() {
+  for (const s of L.stationObjs) {
+    const n = s.passengers.filter(p => p.state === 'waiting').length;
+    s.label.el.innerHTML = `${s.st.name}<b>${n > 0 ? n + ' waiting' : 'all aboard ✓'}</b>`;
+  }
+  const total = allPassengers().length, picked = total - waitingCount();
+  statsEl.textContent = `runs ${stats.runs} · picked up ${picked} / ${total}`;
+}
+function resetRun() {
+  for (const p of allPassengers()) { p.state = 'waiting'; p.mesh.visible = true; p.mesh.scale.setScalar(1); p.mesh.position.copy(p.home); p.mesh.rotation.set(0, 0, 0); }
+  collapse = null;
+  stats.runs = 0;
+  drawTrain(L.depot.x, 0);
+  updateHud();
+  state = 'idle';
+  runBtn.disabled = false;
+  runBtn.textContent = 'Run';
+}
+function run() {
+  collapse = null;
+  const probs = evolve(L, L.init, -Infinity, L.stationX).map(abs2);
+  let r = Math.random() * probs.reduce((a, b) => a + b, 0);   // one shot: where will the train be measured?
+  outcome = probs.findIndex(p => (r -= p) <= 0);
+  if (outcome < 0) outcome = probs.length - 1;
+  const { x: a } = L.depot, s = L.stationX, e = L.exit;
+  legs = [
+    { kind: 'move', from: a, to: s, dur: (s - a) / SPEED },
+    { kind: 'dwell', at: s, dur: DWELL, started: false, boarded: false },
+    { kind: 'move', from: s, to: e, dur: (e - s) / SPEED },
+  ];
+  stats.runs += 1;
+  updateHud();
+  t0 = performance.now();
+  state = 'running';
+  runBtn.disabled = true;
+  runBtn.textContent = 'Running…';
+}
+
+// One passenger hops along an arc into the measured train, shrinking as it boards.
+const trainCentre = new THREE.Vector3();
+function hop(p, now) {
+  const u = clamp01((now - p.t0) / 650);
+  ghosts[outcome].roll.localToWorld(trainCentre.set(0.05, 0.38, 0));
+  p.mesh.position.lerpVectors(p.home, trainCentre, easeInOut(u));
+  p.mesh.position.y += 1.1 * 4 * u * (1 - u);
+  p.mesh.rotation.y = u * PI;
+  p.mesh.scale.setScalar(1 - 0.75 * u * u);
+  if (u >= 1) { p.state = 'aboard'; p.mesh.visible = false; updateHud(); }
+}
+
+function step(now) {
+  for (const p of allPassengers()) if (p.state === 'hopping') hop(p, now);
+  if (state !== 'running') return;
+  let t = (now - t0) / 1000;
+  for (const leg of legs) {
+    if (t < leg.dur) {
+      if (leg.kind === 'move') drawTrain(leg.from + (leg.to - leg.from) * easeInOut(t / leg.dur), now);
+      else {
+        if (!leg.started) {                       // measurement: the stations see the train on one rail only
+          leg.started = true;
+          const pre = evolve(L, L.init, -Infinity, L.stationX);
+          const a = pre[outcome], n = Math.sqrt(abs2(a));
+          collapse = { rail: outcome, t0: now, before: pre.map(abs2), vec: pre.map((_, i) => (i === outcome ? [a[0] / n, a[1] / n] : [0, 0])) };
+        }
+        drawTrain(leg.at, now);
+        if (!leg.boarded && t > 0.45) {
+          leg.boarded = true;
+          const station = L.stationObjs.find(s => s.r === outcome);
+          const next = station && station.passengers.find(p => p.state === 'waiting');
+          if (next) { next.state = 'hopping'; next.t0 = now; }
+        }
+      }
+      return;
+    }
+    t -= leg.dur;
+  }
+  drawTrain(L.exit, now);
+  state = 'done';
+  runBtn.disabled = false;
+  runBtn.textContent = waitingCount() > 0 ? 'Run again' : 'Reset';
+}
+runBtn.addEventListener('click', () => {
+  if (state === 'done' && waitingCount() === 0) resetRun();
+  else run();
+});
+
+// ───────────────────────── go ─────────────────────────
+const nav = document.getElementById('levels');
+LEVELS.forEach((lv, i) => {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.dataset.level = String(i);
+  b.textContent = `${i + 1} · ${lv.name}`;
+  b.addEventListener('click', () => { if (state !== 'running') buildLevel(i); });
+  nav.appendChild(b);
+});
+buildLevel(0);
+window.addEventListener('resize', fit);
+renderer.setAnimationLoop(now => {
+  step(now);
+  controls.update();
+  renderer.render(scene, camera);
+  placeLabels();
+});
+</script>
+</body>
+</html>

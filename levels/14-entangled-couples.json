@@ -1,0 +1,132 @@
+{
+  "format": "quantrain-level/1",
+  "id": "14-entangled-couples",
+  "name": "Entangled couples",
+  "blurb": "Two trains leave together. Couples only travel together: bubbles wait at A and D, cubes at B and C. An interlock is a twist that only happens when a train is on each of its rails: it adds π to that branch alone, so teal's last points sends it one way or the other depending on where orange is.",
+  "rails": [
+    "A",
+    "B",
+    "C",
+    "D"
+  ],
+  "columns": 4,
+  "cars": 4,
+  "dispatch": "together",
+  "trains": [
+    {
+      "id": "orange",
+      "colour": "#f2683a",
+      "depot": "A",
+      "rails": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "id": "teal",
+      "colour": "#12a39b",
+      "depot": "C",
+      "rails": [
+        "C",
+        "D"
+      ]
+    }
+  ],
+  "slots": [
+    {
+      "col": 2,
+      "rails": [
+        "B",
+        "C"
+      ]
+    }
+  ],
+  "fixed": [
+    {
+      "type": "points",
+      "col": 1,
+      "rails": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "type": "points",
+      "col": 1,
+      "rails": [
+        "C",
+        "D"
+      ]
+    },
+    {
+      "type": "points",
+      "col": 3,
+      "rails": [
+        "C",
+        "D"
+      ]
+    }
+  ],
+  "stations": [
+    {
+      "id": "a",
+      "name": "Stop A",
+      "rail": "A",
+      "col": 4,
+      "passengers": [
+        "bubble",
+        "bubble"
+      ],
+      "partner": "d"
+    },
+    {
+      "id": "b",
+      "name": "Stop B",
+      "rail": "B",
+      "col": 4,
+      "passengers": [
+        "cube",
+        "cube"
+      ],
+      "partner": "c"
+    },
+    {
+      "id": "c",
+      "name": "Stop C",
+      "rail": "C",
+      "col": 4,
+      "passengers": [
+        "cube",
+        "cube"
+      ],
+      "partner": "b"
+    },
+    {
+      "id": "d",
+      "name": "Stop D",
+      "rail": "D",
+      "col": 4,
+      "passengers": [
+        "bubble",
+        "bubble"
+      ],
+      "partner": "a"
+    }
+  ],
+  "supply": {
+    "interlock": 1
+  },
+  "solutions": {
+    "independent": [],
+    "entangled": [
+      {
+        "type": "interlock",
+        "col": 2,
+        "rails": [
+          "B",
+          "C"
+        ]
+      }
+    ]
+  }
+}

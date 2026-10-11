@@ -1,0 +1,76 @@
+{
+  "format": "quantrain-level/1",
+  "id": "02-twist-tunnel",
+  "name": "Twist tunnel",
+  "blurb": "A twist rolls the train: the roll is its phase. Drop twists on the pads and tap them to turn them by π/4. Twists add up and wrap round. The station takes everyone whatever you do: a train on one track shows its roll to nobody.",
+  "rails": [
+    "A"
+  ],
+  "columns": 4,
+  "dispatch": "sequential",
+  "trains": [
+    {
+      "id": "orange",
+      "colour": "#f2683a",
+      "depot": "A"
+    }
+  ],
+  "slots": [
+    {
+      "col": 1,
+      "rails": [
+        "A"
+      ]
+    },
+    {
+      "col": 2,
+      "rails": [
+        "A"
+      ]
+    },
+    {
+      "col": 3,
+      "rails": [
+        "A"
+      ]
+    }
+  ],
+  "fixed": [],
+  "stations": [
+    {
+      "id": "stop",
+      "name": "Stop",
+      "rail": "A",
+      "col": 4,
+      "passengers": [
+        "octahedron",
+        "bubble",
+        "cube"
+      ]
+    }
+  ],
+  "supply": {
+    "twist": null
+  },
+  "solutions": {
+    "untouched": [],
+    "half-turn": [
+      {
+        "type": "twist",
+        "col": 1,
+        "rails": [
+          "A"
+        ],
+        "steps": 2
+      },
+      {
+        "type": "twist",
+        "col": 2,
+        "rails": [
+          "A"
+        ],
+        "steps": 2
+      }
+    ]
+  }
+}

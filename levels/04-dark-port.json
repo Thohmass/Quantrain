@@ -1,0 +1,93 @@
+{
+  "format": "quantrain-level/1",
+  "id": "04-dark-port",
+  "name": "Dark port",
+  "blurb": "Two quantum points in a row. Untouched, every train ends up on line B, where nobody waits: the ghosts meet and cancel on A. One twist changes how they meet.",
+  "rails": [
+    "A",
+    "B"
+  ],
+  "columns": 4,
+  "dispatch": "sequential",
+  "trains": [
+    {
+      "id": "orange",
+      "colour": "#f2683a",
+      "depot": "A"
+    }
+  ],
+  "slots": [
+    {
+      "col": 2,
+      "rails": [
+        "A",
+        "B"
+      ]
+    }
+  ],
+  "fixed": [
+    {
+      "type": "points",
+      "col": 1,
+      "rails": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "type": "points",
+      "col": 3,
+      "rails": [
+        "A",
+        "B"
+      ]
+    }
+  ],
+  "stations": [
+    {
+      "id": "stop-a",
+      "name": "Stop A",
+      "rail": "A",
+      "col": 4,
+      "passengers": [
+        "bubble",
+        "cube",
+        "octahedron",
+        "bubble"
+      ]
+    },
+    {
+      "id": "stop-b",
+      "name": "Stop B",
+      "rail": "B",
+      "col": 4,
+      "passengers": []
+    }
+  ],
+  "supply": {
+    "twist": 1
+  },
+  "solutions": {
+    "untouched": [],
+    "half-turn": [
+      {
+        "type": "twist",
+        "col": 2,
+        "rails": [
+          "B"
+        ],
+        "steps": 4
+      }
+    ],
+    "quarter-turn": [
+      {
+        "type": "twist",
+        "col": 2,
+        "rails": [
+          "B"
+        ],
+        "steps": 2
+      }
+    ]
+  }
+}

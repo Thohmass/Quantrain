@@ -1,0 +1,145 @@
+<div id="stage"></div>
+<div id="labels"></div>
+<header>
+  <h1 id="title">Quantrain</h1>
+  <p id="blurb"></p>
+  <div class="row">
+    <button class="chip" id="back" type="button">‹ Levels</button>
+    <span class="level-only" role="group" aria-label="Other levels">
+      <button class="chip" id="prev-level" type="button" aria-label="Previous level">◀ Previous</button>
+      <button class="chip" id="next-level" type="button" aria-label="Next level">Next ▶</button>
+    </span>
+    <span class="pg-only" id="pg-dispatch" role="group" aria-label="How the trains leave">
+      <button class="chip" type="button" data-dispatch="sequential">trains take turns</button>
+      <button class="chip" type="button" data-dispatch="together">trains leave together</button>
+    </span>
+    <button class="chip pg-only accent" id="make-puzzle" type="button">✎ Make a puzzle</button>
+    <span class="puzzle-only" role="group" aria-label="This puzzle">
+      <button class="chip" id="puzzle-share" type="button">Share</button>
+      <button class="chip" id="puzzle-remix" type="button">Remix</button>
+    </span>
+  </div>
+  <div class="stats" id="stats" aria-live="polite"></div>
+</header>
+<div class="tools">
+  <button id="zoom-out" type="button" aria-label="Zoom out" title="Zoom out">−</button>
+  <button id="zoom-in" type="button" aria-label="Zoom in" title="Zoom in">+</button>
+  <button id="fit" type="button" aria-label="Fit the whole line on screen" title="Fit view">Fit</button>
+  <button id="theme" type="button" aria-label="Switch between light and dark mode" title="Light / dark">
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>
+  </button>
+</div>
+<div id="plus" hidden>
+  <div class="pill" data-at="column"><button type="button" data-remove="column" aria-label="Remove the last column">−</button><button type="button" data-add="column" aria-label="Add a column at the end of the line">+</button></div>
+  <div class="pill" data-at="top"><button type="button" data-remove="top" aria-label="Remove the top track">−</button><button type="button" data-add="top" aria-label="Add a track above">+</button></div>
+  <div class="pill" data-at="bottom"><button type="button" data-remove="bottom" aria-label="Remove the bottom track">−</button><button type="button" data-add="bottom" aria-label="Add a track below">+</button></div>
+</div>
+<section id="maker" class="sheet" hidden aria-labelledby="maker-title">
+  <div class="hood-head">
+    <div>
+      <h2 id="maker-title">Make a puzzle</h2>
+      <p>Your map is fixed for the player. They build only on the <b class="blue">blue pads</b> (tap a pad to switch it).
+        Clear it yourself with ★★★ to share it.</p>
+    </div>
+    <button class="close" id="maker-close" type="button" aria-label="Close the puzzle maker">✕</button>
+  </div>
+  <div class="mk-fields">
+    <label>Name <input id="mk-name" type="text" maxlength="40" placeholder="My puzzle" autocomplete="off"></label>
+    <label>What should the player do? <textarea id="mk-desc" maxlength="280" rows="2" placeholder="e.g. Send every car to Stop A with one twist."></textarea></label>
+  </div>
+  <div class="mk-cols">
+    <div><h3>Blocks the player gets</h3><div id="mk-supply" class="mk-rows"></div></div>
+    <div><h3>Passengers and couples</h3><div id="mk-stations" class="mk-rows"></div></div>
+    <div><h3>Cars per run</h3><div id="mk-cars" class="mk-rows"></div></div>
+  </div>
+  <div class="mk-actions">
+    <button class="big" id="mk-test" type="button">Test puzzle ▶</button>
+    <button class="big alt" id="mk-share" type="button">Share…</button>
+    <p id="mk-status" role="status"></p>
+  </div>
+</section>
+<section id="share" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="share-title">
+  <div class="modal-card">
+    <button class="close" data-close type="button" aria-label="Close">✕</button>
+    <h2 id="share-title">Share your puzzle</h2>
+    <p class="modal-sub" id="share-sub"></p>
+    <div class="qr" id="share-qr" aria-label="QR code of the puzzle link" role="img"></div>
+    <label class="field">Link <span class="copyrow"><input id="share-link" type="text" readonly><button type="button" class="chip" data-copy="share-link">Copy</button></span></label>
+    <label class="field">Puzzle code <span class="copyrow"><textarea id="share-code" rows="2" readonly></textarea><button type="button" class="chip" data-copy="share-code">Copy</button></span></label>
+    <button type="button" class="big" id="share-native" hidden>Send…</button>
+    <p class="modal-note" id="share-note"></p>
+  </div>
+</section>
+<section id="open" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="open-title">
+  <div class="modal-card">
+    <button class="close" data-close type="button" aria-label="Close">✕</button>
+    <h2 id="open-title">Open a puzzle</h2>
+    <p class="modal-sub">Paste a puzzle link or code that someone shared with you.</p>
+    <label class="field">Link or code <textarea id="open-text" rows="3" placeholder="https://…#p=q1.…  or  q1.…" autocomplete="off"></textarea></label>
+    <p class="modal-note bad" id="open-error" role="alert"></p>
+    <button class="big" id="open-go" type="button">Open puzzle</button>
+  </div>
+</section>
+<section id="result" hidden role="dialog" aria-modal="false" aria-labelledby="result-title">
+  <div class="result-card">
+    <button class="close" id="result-close" type="button" aria-label="Close and keep building">✕</button>
+    <h2 id="result-title"></h2>
+    <div class="result-stars" id="result-stars"></div>
+    <p class="result-sub" id="result-sub"></p>
+    <div class="result-table" id="result-table"></div>
+    <div class="result-actions">
+      <button type="button" class="big alt" id="result-hood">Under the hood</button>
+      <button type="button" class="big alt" id="result-retry">Keep building</button>
+      <button type="button" class="big alt" id="result-levels">Levels</button>
+      <button type="button" class="big" id="result-next">Next level ▶</button>
+      <button type="button" class="big" id="result-share" hidden>Share puzzle</button>
+    </div>
+  </div>
+</section>
+<section class="screen" id="menu" hidden aria-labelledby="menu-title">
+  <div class="menu-inner">
+    <svg class="menu-art" viewBox="0 0 320 90" aria-hidden="true">
+      <path d="M10 30h70c40 0 40 30 80 30h150" class="m-rail"/><path d="M10 60h70c40 0 40-30 80-30h150" class="m-rail"/>
+      <rect x="112" y="31" width="28" height="28" rx="3" class="m-split"/>
+      <circle cx="240" cy="30" r="7" class="m-stop"/><circle cx="240" cy="60" r="7" class="m-stop"/>
+      <rect x="22" y="22" width="34" height="16" rx="6" class="m-train"/>
+    </svg>
+    <h1 id="menu-title">Quantrain</h1>
+    <p>Quantum puzzles on a metro map. Every line you build is a real Qiskit circuit.</p>
+    <button class="big" id="go-levels" type="button">Levels</button>
+    <button class="big alt" id="go-playground" type="button">Playground</button>
+    <button class="big alt" id="go-open" type="button">Open a shared puzzle</button>
+    <p class="fine">This effort is supported by Qollab &amp; IonQ.</p>
+  </div>
+</section>
+<section class="screen" id="levels-screen" hidden aria-labelledby="levels-title">
+  <div class="screen-head">
+    <button class="chip" type="button" data-go="menu">‹ Menu</button>
+    <h2 id="levels-title">Levels</h2>
+  </div>
+  <div class="level-grid" id="level-grid"></div>
+</section>
+<div class="dock">
+  <div class="palette" id="palette" role="toolbar" aria-label="Blocks: drag one onto a dashed spot on the line"></div>
+  <div class="bar">
+    <button id="hood-open" type="button">Under the hood</button>
+    <button id="run" type="button">Run</button>
+  </div>
+</div>
+<section id="hood" hidden aria-labelledby="hood-title">
+  <div class="hood-head">
+    <div>
+      <h2 id="hood-title">Under the hood</h2>
+      <p id="hood-sub"></p>
+      <div class="row" id="hood-trains"></div>
+    </div>
+    <button class="close" id="hood-close" type="button" aria-label="Close the circuit view">✕</button>
+  </div>
+  <div class="circuit" id="hood-circuit"></div>
+  <div class="check" id="hood-check"></div>
+  <details class="code">
+    <summary>Qiskit code for this circuit</summary>
+    <pre><code id="hood-code"></code></pre>
+    <button id="hood-copy" type="button">Copy code</button>
+  </details>
+</section>

@@ -1,0 +1,111 @@
+{
+  "format": "quantrain-level/1",
+  "id": "05-quarter-turn",
+  "name": "Quarter turn",
+  "blurb": "An old tunnel on B already turns the train a quarter. Only the difference between the ghosts' rolls matters, and a twist can't be undone, only turned further. Send every car to B.",
+  "rails": [
+    "A",
+    "B"
+  ],
+  "columns": 5,
+  "dispatch": "sequential",
+  "trains": [
+    {
+      "id": "orange",
+      "colour": "#f2683a",
+      "depot": "A"
+    }
+  ],
+  "slots": [
+    {
+      "col": 3,
+      "rails": [
+        "A",
+        "B"
+      ]
+    }
+  ],
+  "fixed": [
+    {
+      "type": "points",
+      "col": 1,
+      "rails": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "type": "twist",
+      "col": 2,
+      "rails": [
+        "B"
+      ],
+      "steps": 2
+    },
+    {
+      "type": "points",
+      "col": 4,
+      "rails": [
+        "A",
+        "B"
+      ]
+    }
+  ],
+  "stations": [
+    {
+      "id": "stop-a",
+      "name": "Stop A",
+      "rail": "A",
+      "col": 5,
+      "passengers": []
+    },
+    {
+      "id": "stop-b",
+      "name": "Stop B",
+      "rail": "B",
+      "col": 5,
+      "passengers": [
+        "cube",
+        "bubble",
+        "octahedron",
+        "cube"
+      ]
+    }
+  ],
+  "supply": {
+    "twist": 1
+  },
+  "solutions": {
+    "untouched": [],
+    "even-out": [
+      {
+        "type": "twist",
+        "col": 3,
+        "rails": [
+          "A"
+        ],
+        "steps": 2
+      }
+    ],
+    "full-turn": [
+      {
+        "type": "twist",
+        "col": 3,
+        "rails": [
+          "B"
+        ],
+        "steps": 6
+      }
+    ],
+    "half-turn": [
+      {
+        "type": "twist",
+        "col": 3,
+        "rails": [
+          "B"
+        ],
+        "steps": 2
+      }
+    ]
+  }
+}

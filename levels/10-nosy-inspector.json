@@ -1,0 +1,123 @@
+{
+  "format": "quantrain-level/1",
+  "id": "10-nosy-inspector",
+  "name": "Nosy inspector",
+  "blurb": "The inspector on B has nobody to pick up, but it sees every train that passes. Knowing which way the train went destroys the interference. Get every car to B.",
+  "rails": [
+    "A",
+    "B",
+    "C"
+  ],
+  "columns": 6,
+  "dispatch": "sequential",
+  "trains": [
+    {
+      "id": "orange",
+      "colour": "#f2683a",
+      "depot": "A"
+    }
+  ],
+  "slots": [
+    {
+      "col": 2,
+      "rails": [
+        "B",
+        "C"
+      ]
+    },
+    {
+      "col": 3,
+      "rails": [
+        "A"
+      ]
+    },
+    {
+      "col": 4,
+      "rails": [
+        "B",
+        "C"
+      ]
+    }
+  ],
+  "fixed": [
+    {
+      "type": "points",
+      "col": 1,
+      "rails": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "type": "points",
+      "col": 5,
+      "rails": [
+        "A",
+        "B"
+      ]
+    }
+  ],
+  "stations": [
+    {
+      "id": "inspector",
+      "name": "Inspector",
+      "rail": "B",
+      "col": 3,
+      "passengers": []
+    },
+    {
+      "id": "stop-a",
+      "name": "Stop A",
+      "rail": "A",
+      "col": 6,
+      "passengers": []
+    },
+    {
+      "id": "stop-b",
+      "name": "Stop B",
+      "rail": "B",
+      "col": 6,
+      "passengers": [
+        "octahedron",
+        "cube",
+        "bubble",
+        "octahedron"
+      ]
+    }
+  ],
+  "supply": {
+    "cross": 2,
+    "twist": 1
+  },
+  "solutions": {
+    "untouched": [],
+    "twist": [
+      {
+        "type": "twist",
+        "col": 3,
+        "rails": [
+          "A"
+        ],
+        "steps": 4
+      }
+    ],
+    "detour": [
+      {
+        "type": "cross",
+        "col": 2,
+        "rails": [
+          "B",
+          "C"
+        ]
+      },
+      {
+        "type": "cross",
+        "col": 4,
+        "rails": [
+          "B",
+          "C"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,117 @@
+{
+  "format": "quantrain-level/1",
+  "id": "07-crossed-wires",
+  "name": "Crossed wires",
+  "blurb": "The dark port again, with one crossover to place. Swapping two ghosts that look the same changes nothing; changing what goes in or what comes out does.",
+  "rails": [
+    "A",
+    "B"
+  ],
+  "columns": 6,
+  "dispatch": "sequential",
+  "trains": [
+    {
+      "id": "orange",
+      "colour": "#f2683a",
+      "depot": "A"
+    }
+  ],
+  "slots": [
+    {
+      "col": 1,
+      "rails": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "col": 3,
+      "rails": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "col": 5,
+      "rails": [
+        "A",
+        "B"
+      ]
+    }
+  ],
+  "fixed": [
+    {
+      "type": "points",
+      "col": 2,
+      "rails": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "type": "points",
+      "col": 4,
+      "rails": [
+        "A",
+        "B"
+      ]
+    }
+  ],
+  "stations": [
+    {
+      "id": "stop-a",
+      "name": "Stop A",
+      "rail": "A",
+      "col": 6,
+      "passengers": [
+        "bubble",
+        "octahedron",
+        "cube",
+        "bubble"
+      ]
+    },
+    {
+      "id": "stop-b",
+      "name": "Stop B",
+      "rail": "B",
+      "col": 6,
+      "passengers": []
+    }
+  ],
+  "supply": {
+    "cross": 1
+  },
+  "solutions": {
+    "untouched": [],
+    "middle": [
+      {
+        "type": "cross",
+        "col": 3,
+        "rails": [
+          "A",
+          "B"
+        ]
+      }
+    ],
+    "swap-in": [
+      {
+        "type": "cross",
+        "col": 1,
+        "rails": [
+          "A",
+          "B"
+        ]
+      }
+    ],
+    "swap-out": [
+      {
+        "type": "cross",
+        "col": 5,
+        "rails": [
+          "A",
+          "B"
+        ]
+      }
+    ]
+  }
+}

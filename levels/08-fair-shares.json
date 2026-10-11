@@ -1,0 +1,125 @@
+{
+  "format": "quantrain-level/1",
+  "id": "08-fair-shares",
+  "name": "Fair shares",
+  "blurb": "Two quantum points split the train three ways. Match the split to the passengers: one at A, two at B, one at C.",
+  "rails": [
+    "A",
+    "B",
+    "C"
+  ],
+  "columns": 4,
+  "dispatch": "sequential",
+  "trains": [
+    {
+      "id": "orange",
+      "colour": "#f2683a",
+      "depot": "A"
+    }
+  ],
+  "slots": [
+    {
+      "col": 1,
+      "rails": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "col": 2,
+      "rails": [
+        "B",
+        "C"
+      ]
+    },
+    {
+      "col": 3,
+      "rails": [
+        "A",
+        "B"
+      ]
+    }
+  ],
+  "fixed": [],
+  "stations": [
+    {
+      "id": "stop-a",
+      "name": "Stop A",
+      "rail": "A",
+      "col": 4,
+      "passengers": [
+        "bubble"
+      ]
+    },
+    {
+      "id": "stop-b",
+      "name": "Stop B",
+      "rail": "B",
+      "col": 4,
+      "passengers": [
+        "cube",
+        "octahedron"
+      ]
+    },
+    {
+      "id": "stop-c",
+      "name": "Stop C",
+      "rail": "C",
+      "col": 4,
+      "passengers": [
+        "bubble"
+      ]
+    }
+  ],
+  "supply": {
+    "points": 2,
+    "cross": 1
+  },
+  "solutions": {
+    "untouched": [],
+    "tempting": [
+      {
+        "type": "points",
+        "col": 1,
+        "rails": [
+          "A",
+          "B"
+        ]
+      },
+      {
+        "type": "points",
+        "col": 2,
+        "rails": [
+          "B",
+          "C"
+        ]
+      }
+    ],
+    "fair": [
+      {
+        "type": "points",
+        "col": 1,
+        "rails": [
+          "A",
+          "B"
+        ]
+      },
+      {
+        "type": "points",
+        "col": 2,
+        "rails": [
+          "B",
+          "C"
+        ]
+      },
+      {
+        "type": "cross",
+        "col": 3,
+        "rails": [
+          "A",
+          "B"
+        ]
+      }
+    ]
+  }
+}

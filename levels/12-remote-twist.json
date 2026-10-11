@@ -1,0 +1,107 @@
+{
+  "format": "quantrain-level/1",
+  "id": "12-remote-twist",
+  "name": "Remote twist",
+  "blurb": "Two trains leave together. Orange runs the dark port and ends on empty B. Teal never splits, it just rides on C. An interlock is a twist that only happens when a train is on each of its rails: use teal to turn orange's ghost on B.",
+  "rails": [
+    "A",
+    "B",
+    "C"
+  ],
+  "columns": 4,
+  "cars": 3,
+  "dispatch": "together",
+  "trains": [
+    {
+      "id": "orange",
+      "colour": "#f2683a",
+      "depot": "A",
+      "rails": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "id": "teal",
+      "colour": "#12a39b",
+      "depot": "C",
+      "rails": [
+        "C"
+      ]
+    }
+  ],
+  "slots": [
+    {
+      "col": 2,
+      "rails": [
+        "B",
+        "C"
+      ]
+    }
+  ],
+  "fixed": [
+    {
+      "type": "points",
+      "col": 1,
+      "rails": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "type": "points",
+      "col": 3,
+      "rails": [
+        "A",
+        "B"
+      ]
+    }
+  ],
+  "stations": [
+    {
+      "id": "stop-a",
+      "name": "Stop A",
+      "rail": "A",
+      "col": 4,
+      "passengers": [
+        "bubble",
+        "cube",
+        "octahedron"
+      ]
+    },
+    {
+      "id": "stop-b",
+      "name": "Stop B",
+      "rail": "B",
+      "col": 4,
+      "passengers": []
+    },
+    {
+      "id": "stop-c",
+      "name": "Stop C",
+      "rail": "C",
+      "col": 4,
+      "passengers": [
+        "octahedron",
+        "bubble",
+        "cube"
+      ]
+    }
+  ],
+  "supply": {
+    "interlock": 1
+  },
+  "solutions": {
+    "untouched": [],
+    "interlock": [
+      {
+        "type": "interlock",
+        "col": 2,
+        "rails": [
+          "B",
+          "C"
+        ]
+      }
+    ]
+  }
+}

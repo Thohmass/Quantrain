@@ -1,0 +1,135 @@
+{
+  "format": "quantrain-level/1",
+  "id": "11-switch-both-ways",
+  "name": "Switch both ways",
+  "blurb": "When two ghosts meet at quantum points, the phase between them picks the exit: no difference sends the train one way, a half turn (π) the other. The second loop already has a π twist. Stop at A first, then at B.",
+  "rails": [
+    "A",
+    "B"
+  ],
+  "columns": 8,
+  "cars": 3,
+  "dispatch": "sequential",
+  "trains": [
+    {
+      "id": "orange",
+      "colour": "#f2683a",
+      "depot": "A"
+    }
+  ],
+  "slots": [
+    {
+      "col": 2,
+      "rails": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "col": 6,
+      "rails": [
+        "B"
+      ]
+    }
+  ],
+  "fixed": [
+    {
+      "type": "points",
+      "col": 1,
+      "rails": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "type": "points",
+      "col": 3,
+      "rails": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "type": "points",
+      "col": 5,
+      "rails": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "type": "twist",
+      "col": 6,
+      "rails": [
+        "A"
+      ],
+      "steps": 4
+    },
+    {
+      "type": "points",
+      "col": 7,
+      "rails": [
+        "A",
+        "B"
+      ]
+    }
+  ],
+  "stations": [
+    {
+      "id": "first",
+      "name": "Stop 1",
+      "rail": "A",
+      "col": 4,
+      "passengers": [
+        "bubble",
+        "cube",
+        "octahedron"
+      ]
+    },
+    {
+      "id": "second",
+      "name": "Stop 2",
+      "rail": "B",
+      "col": 8,
+      "passengers": [
+        "cube",
+        "bubble",
+        "octahedron"
+      ]
+    }
+  ],
+  "supply": {
+    "twist": null
+  },
+  "solutions": {
+    "empty": [],
+    "both-ways": [
+      {
+        "type": "twist",
+        "col": 2,
+        "rails": [
+          "A"
+        ],
+        "steps": 4
+      },
+      {
+        "type": "twist",
+        "col": 6,
+        "rails": [
+          "B"
+        ],
+        "steps": 4
+      }
+    ],
+    "first-only": [
+      {
+        "type": "twist",
+        "col": 2,
+        "rails": [
+          "B"
+        ],
+        "steps": 4
+      }
+    ]
+  }
+}

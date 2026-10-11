@@ -1,0 +1,93 @@
+{
+  "format": "quantrain-level/1",
+  "id": "03-quantum-points",
+  "name": "Quantum points",
+  "blurb": "Quantum points split the train into two ghosts. The stations measure it: each car shows up on one line only, at random. Serve both stops.",
+  "rails": [
+    "A",
+    "B"
+  ],
+  "columns": 3,
+  "dispatch": "sequential",
+  "trains": [
+    {
+      "id": "orange",
+      "colour": "#f2683a",
+      "depot": "A"
+    }
+  ],
+  "slots": [
+    {
+      "col": 1,
+      "rails": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "col": 2,
+      "rails": [
+        "A",
+        "B"
+      ]
+    }
+  ],
+  "fixed": [],
+  "stations": [
+    {
+      "id": "stop-a",
+      "name": "Stop A",
+      "rail": "A",
+      "col": 3,
+      "passengers": [
+        "bubble",
+        "cube"
+      ]
+    },
+    {
+      "id": "stop-b",
+      "name": "Stop B",
+      "rail": "B",
+      "col": 3,
+      "passengers": [
+        "octahedron",
+        "bubble"
+      ]
+    }
+  ],
+  "supply": {
+    "points": 1,
+    "twist": null
+  },
+  "solutions": {
+    "untouched": [],
+    "split": [
+      {
+        "type": "points",
+        "col": 1,
+        "rails": [
+          "A",
+          "B"
+        ]
+      }
+    ],
+    "split-and-twist": [
+      {
+        "type": "points",
+        "col": 1,
+        "rails": [
+          "A",
+          "B"
+        ]
+      },
+      {
+        "type": "twist",
+        "col": 2,
+        "rails": [
+          "B"
+        ],
+        "steps": 2
+      }
+    ]
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "format": "quantrain-level/1",
+  "id": "01-first-departure",
+  "name": "First departure",
+  "blurb": "Your train is a single photon and the station is a detector. Press Run: one press sends one train of cars, and every car is one shot of the quantum circuit.",
+  "rails": [
+    "A"
+  ],
+  "columns": 2,
+  "dispatch": "sequential",
+  "trains": [
+    {
+      "id": "orange",
+      "colour": "#f2683a",
+      "depot": "A"
+    }
+  ],
+  "slots": [],
+  "fixed": [],
+  "stations": [
+    {
+      "id": "stop",
+      "name": "Stop",
+      "rail": "A",
+      "col": 2,
+      "passengers": [
+        "bubble",
+        "cube",
+        "octahedron"
+      ]
+    }
+  ],
+  "supply": {},
+  "solutions": {
+    "untouched": []
+  }
+}
