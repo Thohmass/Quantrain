@@ -15,8 +15,8 @@ Elements:
   interlock         → CZ on two rails of different trains        — phase π only if both trains are there
 
 Dispatch "sequential": trains take turns, so each train gets its own circuit. Dispatch "together": all
-trains share one circuit (one X per depot). A run sends the list of circuits as ONE job (IonQ accepts one
-job per run). Classical bits: bit i = qubit i (rails, then stations).
+trains share one circuit (one X per depot). On local simulators a run sends the list of circuits as ONE job;
+on IonQ (one job per run, one circuit per job) it sends only the circuit of the train shown. Classical bits: bit i = qubit i (rails, then stations).
 """
 from __future__ import annotations
 
@@ -97,7 +97,7 @@ def apply_element(qc: QuantumCircuit, level: Level, el: Element) -> None:
 
 
 def build_run(level: Level, elements: list[Element], *, measure: bool = True) -> list[QuantumCircuit]:
-    """All circuits for one run, in dispatch order (one per train, or one for all). Send them as one job."""
+    """All circuits for one run, in dispatch order (one per train, or one for all)."""
     return [build_circuit(level, elements, g, measure=measure) for g in level.groups()]
 
 

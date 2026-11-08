@@ -374,6 +374,36 @@ def test_qollab_bridge_keeps_the_physics():
             assert sum(counts.values()) == 64 and set(counts) <= want, (level.id, counts)
 
 
+
+def test_qollab_ionq_sends_one_circuit():
+    """Qollab's IonQ route takes one circuit per job: on a backend named ionq, run_shots sends only the circuit
+    of the train shown, as the circuit itself, and reports its index as "first"."""
+    import json
+    from qiskit import QuantumCircuit
+    from qiskit.providers.basic_provider import BasicSimulator
+    from quantrain.qollab import run_shots
+
+    class FakeIonQ:
+        name = "ionq_simulator"
+        def __init__(self):
+            self.sim, self.sent = BasicSimulator(), []
+        def run(self, circuits, shots):
+            self.sent.append(circuits)
+            return self.sim.run(circuits, shots=shots)
+
+    # two trains taking turns: two circuits per run
+    data = json.loads((ROOT / "levels" / "03-quantum-points.json").read_text(encoding="utf-8"))
+    data["trains"] = [dict(data["trains"][0], id="t1"), dict(data["trains"][0], id="t2", colour="#3a8af2")]
+    level = load_level(data)
+    assert len(level.groups()) == 2
+    for group in (0, 1):
+        ionq = FakeIonQ()
+        out = json.loads(run_shots(ionq, json.dumps(data), "[]", 50, group))
+        assert len(ionq.sent) == 1 and isinstance(ionq.sent[0], QuantumCircuit)
+        assert out["first"] == group and len(out["groups"]) == 1 and sum(out["groups"][0].values()) == 50
+    out = json.loads(run_shots(BasicSimulator(), json.dumps(data), "[]", 50))   # locally: both trains, one job
+    assert out["first"] == 0 and len(out["groups"]) == 2
+
 def test_decode_bitstrings():
     level = load_level(ROOT / "levels" / "03-quantum-points.json")
     # bit order: qubit 0 = rail A is the rightmost character; then rail B; then stop-a, stop-b

@@ -32,7 +32,8 @@ A couple of details:
 * **Sequential trains** (the default) take turns, so each train gets its own circuit. **Trains that leave
   together** share one circuit; each train owns the tracks from its depot down to the next train's depot,
   and only an interlock connects the tracks of two trains. The level validator enforces this rule.
-* A run sends all of its circuits as **one job**, because IonQ accepts one job per Qollab run.
+* On local simulators, a run sends all of its circuits as **one job**. Qollab's IonQ route takes one job per
+  run and one circuit per job, so on IonQ only the circuit of the train shown Under the hood is sent.
 * An outcome reads as "stations that saw a train | exit track(s)". If noise on real hardware leaves the
   tracks in an impossible state (no train, or two trains on one train's tracks), the outcome is "derailed".
 

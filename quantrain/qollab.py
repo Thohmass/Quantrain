@@ -2,13 +2,15 @@
 
 On Qollab (JS / Qiskit project), main.js calls
 
-    run_shots(backend, level_json, placements_json, shots)
+    run_shots(backend, level_json, placements_json, shots, group)
 
 with the backend the player picked in the "Select QPU" dialog. It builds every circuit of the run with the
-same translator the tests check (quantrain.build_run), rewrites the beam splitter into gates every backend
-accepts, sends all circuits as ONE job (IonQ backends allow one job per run), and returns the counts decoded
-into game outcomes ("stations that saw a train|exit rails", or "|derail" when noise put the trains on an
-impossible set of rails), one dict per circuit, as JSON.
+same translator the tests check (quantrain.build_run) and rewrites the beam splitter into gates every backend
+accepts. Local simulators get every circuit of the run in ONE job. Qollab's IonQ route takes one job per run
+and a single circuit per job, so on IonQ only the circuit of `group` (the train shown Under the hood) is
+sent, as the circuit itself. The counts come back decoded into game outcomes ("stations that saw a
+train|exit rails", or "|derail" when noise put the trains on an impossible set of rails), one dict per
+circuit sent, as JSON; "first" is the index of the first circuit sent.
 """
 from __future__ import annotations
 
@@ -38,21 +40,31 @@ def backend_name(backend) -> str:
     return str(name or type(backend).__name__)
 
 
-def run_shots(backend, level_json: str, placements_json: str, shots: int = 1000) -> str:
+def is_ionq(backend) -> bool:
+    return "ionq" in backend_name(backend).lower()
+
+
+def run_shots(backend, level_json: str, placements_json: str, shots: int = 1000, group=None) -> str:
     level = load_level(json.loads(level_json))
     elements = level.layout(json.loads(placements_json))
     circuits = prepare(level, elements)
-    job = backend.run(circuits, shots=int(shots))          # one job for every circuit of the run
+    groups = level.groups()
+    if is_ionq(backend):                                   # IonQ: one circuit, passed as the circuit itself
+        pick = [min(max(int(group or 0), 0), len(circuits) - 1)]
+        job = backend.run(circuits[pick[0]], shots=int(shots))
+    else:                                                  # local simulators: every circuit in one job
+        pick = list(range(len(circuits)))
+        job = backend.run(circuits, shots=int(shots))
     result = job.result()
-    groups = []
-    for i, group in enumerate(level.groups()):
-        counts = result.get_counts(i) if len(circuits) > 1 else result.get_counts()
+    out = []
+    for j, i in enumerate(pick):
+        counts = result.get_counts(j) if len(pick) > 1 else result.get_counts()
         decoded: dict[str, int] = defaultdict(int)
         width = circuits[i].num_clbits
         for key, n in counts.items():
             key = str(key)
             if key.startswith("0x"):                    # some providers report hex keys
                 key = format(int(key, 16), f"0{width}b")
-            decoded[outcome_str(outcome_key(decode(level, key, len(group))))] += int(n)
-        groups.append(dict(decoded))
-    return json.dumps({"backend": backend_name(backend), "shots": int(shots), "groups": groups})
+            decoded[outcome_str(outcome_key(decode(level, key, len(groups[i]))))] += int(n)
+        out.append(dict(decoded))
+    return json.dumps({"backend": backend_name(backend), "shots": int(shots), "first": pick[0], "groups": out})

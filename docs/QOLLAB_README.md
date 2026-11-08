@@ -34,7 +34,7 @@ on a quantum backend. You build the intuition first, then see the circuit that m
    cleared when that one run picks up every passenger: ★★★ for all of them, ★★ for two thirds, ★ for one third.
 4. Open **Under the hood** to see the Qiskit circuit and its code, the exact probabilities, and
    **Run 1000 shots**: real shots sent as one job to the backend you picked in Qollab's *Select QPU* dialog
-   (IonQ allows one job per Qollab run).
+   (IonQ allows one job per Qollab run and one circuit per job, so on IonQ the shots are for the train shown).
 5. **Make your own puzzle** in the Playground (✎ Make a puzzle). Choose which pads the player may build on
    and which blocks they get, clear it yourself with ★★★, and share its code. Someone else opens it with
    **Open a shared puzzle** in the menu. The whole puzzle is in the code: nothing is uploaded.

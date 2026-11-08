@@ -4432,8 +4432,8 @@ function renderHood() {
     `<span class="verdict ${agree ? 'good' : 'bad'}">${agree ? '✓ Circuit and train physics agree' : '✗ Circuit and train physics disagree'}</span>` +
     `<div class="statrun"><button type="button" id="stat-run"${shotBusy || ionqJobUsed ? ' disabled' : ''}>${shotBusy ? 'Running…' : `Run ${STAT_SHOTS} shots`}</button>` +
     `<p>${shotError ? `<b class="bad">The job failed: ${esc(shotError)}</b> ` : ''}` +
-    `${ionqJobUsed ? 'IonQ allows one job per Qollab run: press Stop and Run in Qollab to send another. ' : ''}` +
-    `${stats ? `${stats.shots} shots on ${esc(stats.source)}. ` : qollab ? 'The shots run as one job on the backend picked in Qollab\'s Select QPU dialog. ' : ''}` +
+    `${ionqJobUsed ? 'IonQ allows one job per Qollab run: press Run in Qollab again to send another. ' : ''}` +
+    `${stats ? `${stats.shots} shots on ${esc(stats.source)}. ` : qollab ? 'The shots run as one job on the backend picked in Qollab\'s Select QPU dialog (on IonQ, for the train shown here). ' : ''}` +
     `The ideal run (what Run plays and scores) gives each outcome exactly its share of the cars. ` +
     `Real shots are random: they wander around the exact probabilities, by about ±${(100 / Math.sqrt(STAT_SHOTS)).toFixed(0)}% for ${STAT_SHOTS} shots.</p></div>`;
   document.getElementById('hood-code').textContent = toQiskitPython(L, circ);
@@ -4444,15 +4444,20 @@ function renderHood() {
 // the circuit's exact statevector probabilities.
 const STAT_SHOTS = 1000;
 let shotStats = new Map(), shotBusy = false, shotError = '', ionqJobUsed = false;   // hood group → { shots, counts, source }
+// Qollab ends a run when main.js finishes, and IonQ refuses jobs after that, so on Qollab main.js waits
+// (last line) until the first "Run 1000 shots" is done.
+let releaseRun;
+const firstShotsDone = new Promise(resolve => { releaseRun = resolve; });
 const qollab = typeof quantrainBridge !== 'undefined' && typeof backend !== 'undefined' ? { bridge: quantrainBridge, backend } : null;   // eslint-disable-line no-undef
 if (qollab) console.log('Quantrain is running. Play in the page above; "Under the hood" → "Run 1000 shots" sends one job to the backend you picked.');
 const shotRunner = {
   async runAll(shots) {                            // → { source, groups: [counts by outcome, one per circuit] }
     if (qollab) {
-      const raw = await qollab.bridge.run_shots.callPromising(qollab.backend, JSON.stringify(L.source), JSON.stringify(placements), shots);
+      // on IonQ the bridge sends only the circuit of the train shown (hoodGroup); locally, every train in one job
+      const raw = await qollab.bridge.run_shots.callPromising(qollab.backend, JSON.stringify(L.source), JSON.stringify(placements), shots, hoodGroup);
       const out = JSON.parse(String(raw));
       if (/ionq/i.test(out.backend)) ionqJobUsed = true;   // IonQ backends take one job per Qollab run
-      return { source: out.backend, groups: out.groups };
+      return { source: out.backend, groups: out.groups, first: out.first ?? 0 };
     }
     const groups = L.groups().map(group => {
       const probs = Object.entries(circuitOutcomes(L, build, group));
@@ -4464,7 +4469,7 @@ const shotRunner = {
       }
       return counts;
     });
-    return { source: 'local simulator (in your browser)', groups };
+    return { source: 'local simulator (in your browser)', groups, first: 0 };
   },
 };
 document.getElementById('hood-check').addEventListener('click', async e => {
@@ -4475,10 +4480,10 @@ document.getElementById('hood-check').addEventListener('click', async e => {
   const stamp = build;
   try {
     const res = await shotRunner.runAll(STAT_SHOTS);
-    if (stamp === build) res.groups.forEach((counts, i) => shotStats.set(i, { shots: STAT_SHOTS, counts, source: res.source }));
+    if (stamp === build) res.groups.forEach((counts, i) => shotStats.set(res.first + i, { shots: STAT_SHOTS, counts, source: res.source }));
   } catch (err) {
     shotError = String(err?.message ?? err).split('\n').filter(Boolean).slice(-1)[0] ?? 'unknown error';
-  } finally { shotBusy = false; renderHood(); }
+  } finally { shotBusy = false; renderHood(); releaseRun(); }
 });
 document.getElementById('hood-trains').addEventListener('click', e => {
   const b = e.target.closest('[data-train]');
@@ -7381,6 +7386,7 @@ renderer.setAnimationLoop(now => {
   placeLabels();
   placePlus();
 });
+if (qollab) await firstShotsDone;                 // keep the Qollab run live for the first shot job
 </script>
 </body>
 </html>
